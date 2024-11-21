@@ -4,6 +4,8 @@ import (
 	"context"
     "os"
     "fmt"
+    "net/http"
+    "crypto/tls"
     log "github.com/sirupsen/logrus"
     "github.com/spf13/cobra"
     "github.com/gophercloud/gophercloud/v2"
@@ -11,12 +13,21 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v3/volumes"
 )
 
+func newHttpClient(skipVerifySSL bool) http.Client {
+    return http.Client{
+        Transport: &http.Transport{
+            TLSClientConfig: &tls.Config{InsecureSkipVerify: skipVerifySSL},
+        },
+    }
+}
+
 var (
     debug            bool
 	name             string
 	vm               string
     disk             string
 	testing          bool
+    skipVerifySSL    bool
 )
 
 var rootCmd = &cobra.Command{
@@ -35,6 +46,7 @@ var rootCmd = &cobra.Command{
         if err != nil {
             panic(err)
         }
+        providerClient.HTTPClient = newHttpClient(skipVerifySSL)
 
         volumeClient, err := openstack.NewBlockStorageV3(providerClient, gophercloud.EndpointOpts{
 		Region: os.Getenv("OS_REGION_NAME"),
@@ -76,6 +88,7 @@ func init() {
 	rootCmd.MarkPersistentFlagRequired("vm")
     rootCmd.PersistentFlags().StringVar(&disk, "disk", "", "disk-id xxxx-yyyy")
 	rootCmd.MarkPersistentFlagRequired("disk")
+	rootCmd.PersistentFlags().BoolVar(&skipVerifySSL, "skip-verify-ssl", false, "disable ssl verification")
 }
 
 func main() {
