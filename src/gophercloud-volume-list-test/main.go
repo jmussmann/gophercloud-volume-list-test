@@ -67,11 +67,6 @@ var rootCmd = &cobra.Command{
 
 		pages, err := volumes.List(volumeClient, volumes.ListOpts{
 			Name: name,
-			Metadata: map[string]string{
-				"migrate_kit": "true",
-				"vm":          vm,
-				"disk":        disk,
-			},
 		}).AllPages(ctx)
 
 		if err != nil {
