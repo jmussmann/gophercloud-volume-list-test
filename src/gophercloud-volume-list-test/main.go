@@ -28,6 +28,7 @@ var (
 	vm            string
 	disk          string
 	skipVerifySSL bool
+	vzhardware    string
 )
 
 var rootCmd = &cobra.Command{
@@ -65,13 +66,18 @@ var rootCmd = &cobra.Command{
 			panic(err)
 		}
 
+		metadata := map[string]string{
+			"migrate_kit": "true",
+			"vm":          vm,
+			"disk":        disk,
+		}
+		if vzhardware != "" {
+			metadata["vzhardware"] = vzhardware
+		}
+
 		pages, err := volumes.List(volumeClient, volumes.ListOpts{
-			Name: name,
-			Metadata: map[string]string{
-				"migrate_kit": "true",
-				"vm":          vm,
-				"disk":        disk,
-			},
+			Name:     name,
+			Metadata: metadata,
 		}).AllPages(ctx)
 
 		if err != nil {
@@ -104,6 +110,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&disk, "disk", "", "disk-id xxxx-yyyy")
 	rootCmd.MarkPersistentFlagRequired("disk")
 	rootCmd.PersistentFlags().BoolVar(&skipVerifySSL, "skip-verify-ssl", false, "disable ssl verification")
+	rootCmd.PersistentFlags().StringVar(&vzhardware, "vzhardware", "", "vzhardware")
 }
 
 func main() {
